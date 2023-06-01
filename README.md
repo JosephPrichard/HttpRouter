@@ -23,7 +23,8 @@ router.Use(func(next http.Handler) http.Handler {
 })
 ```
 In Go, a middleware is a function that takes a http.Handler as an argument (the next handler) and returns a http.Handler.
-All requests to the router will pass the middleware. In the example above next.ServeHttp(w, r) executes the route handler.
+All requests to the router will pass the middleware. In the example above next.ServeHttp(w, r) calls the next handler in the chain which
+could be another middleware or the handler.
 
 We can define a route using the "Get", "Post", "Put", "Delete", or "Route" functions.
 ```
