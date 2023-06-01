@@ -1,3 +1,3 @@
-module Router
+module TigerMux
 
 go 1.20

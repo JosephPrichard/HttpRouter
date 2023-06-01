@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Router/mux"
+	"TigerMux/mux"
 	"io"
 	"log"
 	"net/http"
@@ -98,10 +98,10 @@ func main() {
 		w.Write([]byte("Subrouter hello world"))
 	})
 
-	subRouter.Get("/route/{param}", func(w http.ResponseWriter, r *http.Request) {
+	subRouter.Get("/route/{param}/{param1}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		log.Printf("Subrouter route param %s", vars["param"])
-		w.Write([]byte("Subrouter route " + vars["param"]))
+		log.Printf("Subrouter route param %s, %s", vars["param"], vars["param1"])
+		w.Write([]byte("Subrouter route " + vars["param"] + " " + vars["param1"]))
 	})
 
 	subRouter.Get("/route/varr", func(w http.ResponseWriter, r *http.Request) {
