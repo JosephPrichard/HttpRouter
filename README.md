@@ -1,8 +1,8 @@
 # DragonMux
-A simple router for building http services in Go! Supports path parameters, regex matching, subrouting, and middlewares! Includes utility functions to extract path parameters in handler functions. TigerMux is implemented using a Prefix tree and uses a recursive algorithm to construct routes with middleware.
+A simple router for building http services in Go! Supports path parameters, regex matching, subrouting, and middlewares! Includes utility functions to extract path parameters in handler functions. DragonMux is implemented using a Prefix tree and uses a recursive algorithm to construct routes with middleware.
 
 This project was inspired by popular Go routers such as Chi and GorillaMux.
-TigerMux was implemented as my first Go project mainly for the purposes of learning Go!
+DragonMux was implemented as my first Go project mainly for the purposes of learning Go!
 
 ## Usage
 
