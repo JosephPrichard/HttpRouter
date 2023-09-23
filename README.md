@@ -1,8 +1,8 @@
-# TigerMux
-A simple router for building http services in Go! Supports path parameters, regex matching, subrouting, and middlewares! Includes utility functions to extract path parameters in handler functions. TigerMux is implemented using a Prefix tree and uses a recursive algorithm to construct routes with middleware.
+# DragonMux
+A simple router for building http services in Go! Supports path parameters, regex matching, subrouting, and middlewares! Includes utility functions to extract path parameters in handler functions. DragonMux is implemented using a Prefix tree and uses a recursive algorithm to construct routes with middleware.
 
 This project was inspired by popular Go routers such as Chi and GorillaMux.
-TigerMux was implemented as my first Go project mainly for the purposes of learning Go!
+DragonMux was implemented as my first Go project mainly for the purposes of learning Go!
 
 ## Usage
 
@@ -23,7 +23,8 @@ router.Use(func(next http.Handler) http.Handler {
 })
 ```
 In Go, a middleware is a function that takes a http.Handler as an argument (the next handler) and returns a http.Handler.
-All requests to the router will pass the middleware. In the example above next.ServeHttp(w, r) executes the route handler.
+All requests to the router will pass the middleware. In the example above next.ServeHttp(w, r) calls the next handler in the chain which
+could be another middleware or the handler.
 
 We can define a route using the "Get", "Post", "Put", "Delete", or "Route" functions.
 ```
