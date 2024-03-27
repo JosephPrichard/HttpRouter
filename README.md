@@ -6,7 +6,7 @@ A simple router for building http services in Go. Supports path parameters, rege
 With a [correctly configured](https://golang.org/doc/install#testing) Go toolchain:
 
 ```sh
-go get -u github.com/gorilla/mux
+go get -u github.com/JosephPrichard/HttpRouter
 ```
 
 
