@@ -74,7 +74,7 @@ func CreateTestRouter() *ServerRouter {
 		})
 	})
 
-	sr.Get("/{name}/|([0-9]+)|", func(w http.ResponseWriter, r *http.Request) {
+	sr.Get("/{name}/[[0-9]+]", func(w http.ResponseWriter, r *http.Request) {
 		vars := Vars(r)
 		name := vars["name"]
 		_, err := w.Write([]byte("Name: " + name))
@@ -99,7 +99,7 @@ func TestRoutes(t *testing.T) {
 	expectedRoutes := []string{
 		"POST /api/echo",
 		"GET /api/products/ping",
-		"GET /api/products/{name}/|([0-9]+)|",
+		"GET /api/products/{name}/[[0-9]+]",
 	}
 	actualRoutes := r.Routes()
 	if !reflect.DeepEqual(actualRoutes, expectedRoutes) {

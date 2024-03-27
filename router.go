@@ -26,16 +26,13 @@ type Router interface {
 
 func notFound(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
-	w.Write([]byte("Route Not Found"))
+	w.Write([]byte("404 not found"))
 }
 
-// appends a slice of middlewares to the base handler function
 func buildHandler(baseHandler http.HandlerFunc, current int, middlewares ...Middleware) http.Handler {
-	// at last middleware so the next function is to serve base case
 	if current >= len(middlewares) {
 		return baseHandler
 	}
-	// recursively get the next middleware as the argument for the current middleware
 	middleware := middlewares[current]
 	nextMiddleware := buildHandler(baseHandler, current+1, middlewares...)
 	return middleware(nextMiddleware)

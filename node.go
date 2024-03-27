@@ -7,14 +7,13 @@ import (
 )
 
 type RouterNode struct {
-	prefix     string
-	handler    http.Handler
-	childNodes []*RouterNode
-	regex      *regexp.Regexp
+	prefix   string
+	handler  http.Handler
+	children []*RouterNode
+	regex    *regexp.Regexp
 }
 
 func createRouterNode(prefix string) *RouterNode {
-	// create a compiled regex if the node uses a regex
 	var re *regexp.Regexp = nil
 	if isRegex(prefix) {
 		r, err := regexp.Compile(extractRegex(prefix))
@@ -23,27 +22,22 @@ func createRouterNode(prefix string) *RouterNode {
 		}
 		re = r
 	}
-	// prefix node wasn't found, then create new, add it to node, and return it
 	return &RouterNode{
-		prefix:     prefix,
-		childNodes: []*RouterNode{},
-		handler:    nil,
-		regex:      re,
+		prefix:   prefix,
+		children: []*RouterNode{},
+		handler:  nil,
+		regex:    re,
 	}
 }
 
 func (routerNode *RouterNode) matchChild(prefix string) *RouterNode {
-	// iterate through level to find the first matching node for prefix
-	for _, child := range routerNode.childNodes {
-		// literal matches when equal
+	for _, child := range routerNode.children {
 		if child.prefix == prefix {
 			return child
 		}
-		// url param always matches
 		if child.isURLParam() {
 			return child
 		}
-		// regex matches with a special case
 		if child.regex != nil && child.regex.MatchString(prefix) {
 			return child
 		}
@@ -51,44 +45,43 @@ func (routerNode *RouterNode) matchChild(prefix string) *RouterNode {
 	return nil
 }
 
-func (routerNode *RouterNode) findChild(prefix string) *RouterNode {
-	// iterate through level to find node for prefix
-	for _, child := range routerNode.childNodes {
-		if child.prefix == prefix {
-			return child
-		}
+func insertNode(slice []*RouterNode, index int, value *RouterNode) []*RouterNode {
+	if len(slice) < 1 {
+		return []*RouterNode{value}
 	}
-	return nil
+	slice = append(slice[:index+1], slice[index:]...)
+	slice[index] = value
+	return slice
 }
 
-func (routerNode* RouterNode) insertChild(nodeToInsert *RouterNode) {
-	if nodeToInsert.isURLParam() {
-		// url param node is added to the end
-		routerNode.childNodes = append(routerNode.childNodes, nodeToInsert)
-	} else if nodeToInsert.isRegex() {
-		// regex node is added before the first url param or regex param
-		index := len(routerNode.childNodes)
-		for i, child := range routerNode.childNodes {
+func prependNode(slice []*RouterNode, value *RouterNode) []*RouterNode {
+	return append([]*RouterNode{value}, slice...)
+}
+
+func (routerNode *RouterNode) insertChild(node *RouterNode) {
+	if node.isURLParam() {
+		routerNode.children = append(routerNode.children, node)
+	} else if node.isRegex() {
+		index := len(routerNode.children)
+		for i, child := range routerNode.children {
 			if child.isURLParam() || child.isRegex() {
 				index = i
 				break
 			}
 		}
-		routerNode.childNodes = insert(routerNode.childNodes, index, nodeToInsert)
+		routerNode.children = insertNode(routerNode.children, index, node)
 	} else {
-		// literal node is added to the front
-		routerNode.childNodes = prepend(routerNode.childNodes, nodeToInsert)
+		routerNode.children = prependNode(routerNode.children, node)
 	}
 }
 
 func (routerNode *RouterNode) findOrCreateChild(prefix string) *RouterNode {
-	// iterate through level to find node with prefix
-	node := routerNode.findChild(prefix)
-	if node != nil {
-		return node
+	for _, child := range routerNode.children {
+		if child.prefix == prefix {
+			return child
+		}
 	}
-	// prefix node wasn't found, then create new, add it to node, and return it
-	node = createRouterNode(prefix)
+	node := createRouterNode(prefix)
 	routerNode.insertChild(node)
 	return node
 }
@@ -109,7 +102,7 @@ func traverseNode(prefix string, node *RouterNode, routes *[]string) {
 	if node.handler != nil {
 		*routes = append(*routes, prefix)
 	}
-	for _, n := range node.childNodes {
+	for _, n := range node.children {
 		traverseNode(prefix+"/"+n.prefix, n, routes)
 	}
 }
@@ -119,13 +112,13 @@ func isURLParam(prefix string) bool {
 }
 
 func extractURLParam(prefix string) string {
-	return prefix[1:len(prefix)-1]
+	return prefix[1 : len(prefix)-1]
 }
 
 func isRegex(prefix string) bool {
-	return prefix[0] == '|' && prefix[len(prefix)-1] == '|'
+	return prefix[0] == '[' && prefix[len(prefix)-1] == ']'
 }
 
 func extractRegex(prefix string) string {
-	return prefix[1:len(prefix)-1]
+	return prefix[1 : len(prefix)-1]
 }

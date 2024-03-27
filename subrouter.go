@@ -46,7 +46,6 @@ func (router *SubRouter) Delete(route string, routeHandler http.HandlerFunc) {
 }
 
 func (router *SubRouter) Route(method string, route string, routeHandler http.HandlerFunc) {
-	// build new route with the subrouter's prefix and new handler with the subrouter's middleware
 	route = router.prefix + route
 	routeHandler = buildHandler(routeHandler, 0, router.middlewares...).ServeHTTP
 	router.parent.Route(method, route, routeHandler)

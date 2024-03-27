@@ -51,17 +51,15 @@ func (router *ServerRouter) SubRouter() Router {
 	}
 }
 
-func (router *ServerRouter) getOrCreateMethodNode(method string) *RouterNode {
-	// iterate through level to find node with methods
+func (router *ServerRouter) findMethodNode(method string) *RouterNode {
 	for _, node := range router.methodNodes {
 		if node.prefix == method {
 			return node
 		}
 	}
-	// method node wasn't found, then create and return it
 	node := &RouterNode{
-		prefix:     method,
-		childNodes: []*RouterNode{},
+		prefix:   method,
+		children: []*RouterNode{},
 	}
 	router.methodNodes = append(router.methodNodes, node)
 	return node
@@ -85,17 +83,14 @@ func (router *ServerRouter) Delete(route string, routeHandler http.HandlerFunc) 
 
 func (router *ServerRouter) Route(method string, route string, routeHandler http.HandlerFunc) {
 	route = router.prefix + route
-	// get the right method node for the route
-	node := router.getOrCreateMethodNode(method)
-	// climb down the tree based on the route prefixes
+	node := router.findMethodNode(method)
 	for _, prefix := range strings.Split(route, "/") {
 		if prefix != "" {
 			node = node.findOrCreateChild(prefix)
 		}
 	}
-	// add the handler to the final node with by creating handlers with middleware
 	node.handler = buildHandler(routeHandler, 0, router.middlewares...)
-	log.Printf("Added route %s to node %s", route, node.prefix)
+	log.Printf("Added route %s", route)
 }
 
 func (router *ServerRouter) Use(middleware Middleware) {
@@ -107,28 +102,22 @@ func (router *ServerRouter) NotFound(routeHandler http.HandlerFunc) {
 }
 
 func (router *ServerRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// get the right method node for the route
-	node := router.getOrCreateMethodNode(r.Method)
-	// climb down the tree based on the route prefixes, add url params along the way
+	node := router.findMethodNode(r.Method)
 	for _, prefix := range strings.Split(r.RequestURI, "/") {
 		if prefix == "" {
 			continue
 		}
 		node = node.matchChild(prefix)
-		// node doesn't exist for this prefix so early return
 		if node == nil {
 			router.notFoundHandler(w, r)
 			return
 		}
-		// check if is a url param, if so then add the param to request
 		isParam, param := node.getURLParam()
 		if isParam {
 			setVar(r, param, prefix)
 		}
 	}
-	// check if the node has a handler, and if so execute
 	if node.handler != nil {
-		log.Printf(node.prefix)
 		node.handler.ServeHTTP(w, r)
 	} else {
 		router.notFoundHandler(w, r)
