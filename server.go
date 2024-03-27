@@ -1,4 +1,4 @@
-package mux
+package httprouter
 
 import (
 	"log"
@@ -30,7 +30,7 @@ func (router *ServerRouter) With(m Middleware) RouteBuilder {
 }
 
 func (router *ServerRouter) Routes() []string {
-	routes := []string{}
+	var routes []string
 	for _, m := range router.methodNodes {
 		traverseNode(m.prefix+" ", m, &routes)
 	}

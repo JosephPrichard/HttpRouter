@@ -1,4 +1,4 @@
-package mux
+package httprouter
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 
 type key int
 
+// the id will always be unique since the key type only exists in this package
 var id = key(1)
 
 func setVar(r *http.Request, key string, value string) {

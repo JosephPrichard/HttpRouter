@@ -1,4 +1,4 @@
-package mux
+package httprouter
 
 func insert[T any](slice []T, index int, value T) []T {
 	if len(slice) < 1 {
