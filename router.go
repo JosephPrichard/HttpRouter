@@ -28,7 +28,7 @@ type Router interface {
 type ServerRouter struct {
 	prefix          string
 	middlewares     []Middleware
-	tree            Tree
+	tree            tree
 	notFoundHandler http.HandlerFunc
 }
 
@@ -49,7 +49,7 @@ func buildHandler(baseHandler http.HandlerFunc, middlewares ...Middleware) http.
 func NewRouter() *ServerRouter {
 	return &ServerRouter{
 		middlewares:     []Middleware{},
-		tree:            Tree{},
+		tree:            tree{},
 		notFoundHandler: notFound,
 	}
 }

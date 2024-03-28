@@ -18,6 +18,7 @@ func createTestRouter() *ServerRouter {
 	sr := r.Prefix("/products").SubRouter()
 
 	r.Use(LoggerMiddleware(log.Default()))
+	r.Use(CorsMiddleware())
 
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

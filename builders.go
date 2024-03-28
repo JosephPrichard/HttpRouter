@@ -79,7 +79,7 @@ func (rb RouterBuilder) NewRouter() *ServerRouter {
 	return &ServerRouter{
 		prefix:          rb.prefix,
 		middlewares:     []Middleware{},
-		tree:            Tree{},
+		tree:            tree{},
 		notFoundHandler: notFound,
 	}
 }
