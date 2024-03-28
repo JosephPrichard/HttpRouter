@@ -54,24 +54,27 @@ r.Get("/product/{name}/{slug}", func(w http.ResponseWriter, r *http.Request) {
 
 Path parameters can be accessed in the handler using the `Vars` function.
 
-We can also specify routes that only match if a regex matches by putting a regex between left and right brackets `[ ]`.
+We can also specify routes that only match if the parameter matches a regex matches by putting a regex
+after a colon `:`.
+
 ```go
-r.Get("/product/[[a-z]+]", HandleProduct)
-r.Get("/product/[[0-9]+]", HandleArticle)
-r.Get("/product/[[0-9]+]abc", HandleArticle)
+r.Get("/product/{name:[0-9]+}", HandleProduct)
+r.Get("/article/{name:[a-z]+}", HandleArticle)
 ```
 
-The first matches any route that has only alphabetical characters and the latter only numerical characters. The 3rd route contains a right bracket but doesn't end in it so it will match a route that contains `[[0-9]+]abc`, literally.
+The first matches any route that has only alphabetical characters and the latter only numerical characters.
 
 Keep in mind that different route types have different precedence.
 
 ```go
 r.Get("/product/book", HandleProduct)
-r.Get("/product/[[a-b]+]", HandleArticle)
+r.Get("/product/{name:[a-b]+}", HandleArticle)
 r.Get("/product/{name}", HandleArticle)
 ```
 
-Literal routes have precedence over regex routes which have precendece over param routes. If we send `/product/book`, then the first route matches. Sending `/product/microwave` matches the second route. Sending `/product/123` matches the third route.
+Literal routes have precedence over param routes. If we send `/product/book`, then the first route matches. 
+Sending `/product/123` matches the second route. 
+Sending `/product/microwave` matches the third route.
 
 ### Middlewares
 
