@@ -5,10 +5,10 @@ import (
 	"net/http"
 )
 
-type key int
+type varskey int
 
-// the id will always be unique since the key type only exists in this package
-var id = key(1)
+// the id will always be unique since the varskey type only exists in this package
+var id = varskey(1)
 
 func setVar(r *http.Request, key string, value string) {
 	vars := Vars(r)

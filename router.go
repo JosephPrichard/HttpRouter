@@ -28,7 +28,7 @@ type Router interface {
 type ServerRouter struct {
 	prefix          string
 	middlewares     []Middleware
-	tree            tree
+	trie            trie[http.Handler]
 	notFoundHandler http.HandlerFunc
 }
 
@@ -49,7 +49,7 @@ func buildHandler(baseHandler http.HandlerFunc, middlewares ...Middleware) http.
 func NewRouter() *ServerRouter {
 	return &ServerRouter{
 		middlewares:     []Middleware{},
-		tree:            tree{},
+		trie:            newTrie[http.Handler](),
 		notFoundHandler: notFound,
 	}
 }
@@ -70,7 +70,7 @@ func (router *ServerRouter) With(m Middleware) RouteBuilder {
 }
 
 func (router *ServerRouter) Routes() []string {
-	return router.tree.routes()
+	return router.trie.routes()
 }
 
 func (router *ServerRouter) Prefix(p string) SubRouterBuilder {
@@ -99,34 +99,16 @@ func (router *ServerRouter) Delete(route string, routeHandler http.HandlerFunc) 
 
 func (router *ServerRouter) Route(method string, route string, routeHandler http.HandlerFunc) {
 	route = router.prefix + route
-	node := router.tree.appendRoute(method, route)
-	node.handler = buildHandler(routeHandler, router.middlewares...)
+	handler := buildHandler(routeHandler, router.middlewares...)
+	router.trie.insert(method, route, handler)
 }
 
 func (router *ServerRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	node := router.tree.findNode(r.Method)
-	if node == nil {
+	path := strings.Trim(r.RequestURI, " \n\t")
+	handler := router.trie.find(r.Method, path)
+	if handler == nil || *handler == nil {
 		router.notFoundHandler(w, r)
-	}
-
-	for _, prefix := range strings.Split(r.RequestURI, "/") {
-		if prefix == "" {
-			continue
-		}
-		nextNode, param := node.matchChild(prefix)
-		if nextNode == nil {
-			router.notFoundHandler(w, r)
-			return
-		}
-		if param != "" {
-			setVar(r, param, prefix)
-		}
-		node = nextNode
-	}
-
-	if node.handler != nil {
-		node.handler.ServeHTTP(w, r)
 	} else {
-		router.notFoundHandler(w, r)
+		(*handler).ServeHTTP(w, r)
 	}
 }

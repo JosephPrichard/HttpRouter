@@ -180,41 +180,47 @@ func TestRouter(t *testing.T) {
 	}
 }
 
-func appendString(sb *strings.Builder) {
+func randString() string {
 	minLen := 5
 	maxLen := 10
 	chars := "abcdefghijklmnopqrstuvwxyz"
 	strLen := rand.Intn(maxLen) + minLen
+
+	var sb strings.Builder
 	for k := 0; k < strLen; k++ {
 		c := rand.Intn(len(chars))
 		sb.WriteByte(chars[c])
 	}
+	return sb.String()
 }
 
-func generateRoutes(b *testing.B) []string {
+func generateRoutes() []string {
 	routeCount := 10000
-	minRouteLen := 1
-	maxRouteLen := 500
+	routesLen := 500
 
-	var routes []string
-	for i := 0; i < routeCount; i++ {
-		routeLen := rand.Intn(maxRouteLen) + minRouteLen
+	builders := make([]strings.Builder, routeCount)
+	for i := 0; i < routesLen; i++ {
+		s := randString()
 
-		var sb strings.Builder
-		for j := 0; j < routeLen; j++ {
-			sb.WriteByte('/')
-			appendString(&sb)
+		for i := range builders {
+			rb := &builders[i]
+			rb.WriteByte('/')
+			rb.WriteString(s)
 		}
-		route := sb.String()
-		routes = append(routes, route)
 	}
+
+	routes := make([]string, routeCount)
+	for i := 0; i < len(builders); i++ {
+		routes = append(routes, builders[i].String())
+	}
+
 	return routes
 }
 
 func setupRoutes(b *testing.B) (*ServerRouter, []string) {
 	b.ResetTimer()
 
-	routes := generateRoutes(b)
+	routes := generateRoutes()
 	r := NewRouter()
 
 	for _, route := range routes {
