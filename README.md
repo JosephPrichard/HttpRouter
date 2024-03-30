@@ -1,6 +1,8 @@
 # HttpRouter
 A simple router for building http services in Go. Supports path parameters, regex matching, sub-routing, and middlewares. Additionally includes utility functions to extract path parameters in handler functions. The package is implemented using a prefix tree and uses a simple recursive algorithm to construct routes with middleware. It was inspired by popular Go routers such as [chi](https://github.com/go-chi/chi) and [gorilla/mux](https://github.com/gorilla/mux).
 
+HttpRouter is not a production ready router yet - I'm still working on verification and testing.
+
 ## Install
 
 With a [correctly configured](https://golang.org/doc/install#testing) Go toolchain:

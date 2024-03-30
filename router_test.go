@@ -180,47 +180,10 @@ func TestRouter(t *testing.T) {
 	}
 }
 
-func randString() string {
-	minLen := 5
-	maxLen := 10
-	chars := "abcdefghijklmnopqrstuvwxyz"
-	strLen := rand.Intn(maxLen) + minLen
-
-	var sb strings.Builder
-	for k := 0; k < strLen; k++ {
-		c := rand.Intn(len(chars))
-		sb.WriteByte(chars[c])
-	}
-	return sb.String()
-}
-
-func generateRoutes() []string {
-	routeCount := 10000
-	routesLen := 500
-
-	builders := make([]strings.Builder, routeCount)
-	for i := 0; i < routesLen; i++ {
-		s := randString()
-
-		for i := range builders {
-			rb := &builders[i]
-			rb.WriteByte('/')
-			rb.WriteString(s)
-		}
-	}
-
-	routes := make([]string, routeCount)
-	for i := 0; i < len(builders); i++ {
-		routes = append(routes, builders[i].String())
-	}
-
-	return routes
-}
-
 func setupRoutes(b *testing.B) (*ServerRouter, []string) {
 	b.ResetTimer()
 
-	routes := generateRoutes()
+	routes := generatePaths()
 	r := NewRouter()
 
 	for _, route := range routes {

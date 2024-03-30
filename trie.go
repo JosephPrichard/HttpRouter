@@ -1,19 +1,22 @@
 package httprouter
 
+// a radix trie
 type trie[v any] struct {
 	roots map[string]*[]node[v]
+}
+
+// radix trie nodes
+type node[v any] struct {
+	path     string
+	value    v
+	unset    bool
+	children []node[v]
 }
 
 func newTrie[v any]() trie[v] {
 	return trie[v]{
 		roots: make(map[string]*[]node[v]),
 	}
-}
-
-type node[v any] struct {
-	path     string
-	value    v
-	children []node[v]
 }
 
 func (trie *trie[v]) findRoot(method string) *[]node[v] {
@@ -35,33 +38,42 @@ func (trie *trie[v]) insert(method string, path string, value v) {
 		keepSearching = false
 		for i := range *nodes {
 			curr := &(*nodes)[i]
-			pathsMatch := true
-			ogPathIndex := pathIndex
-			nodePathIndex := 0
 
-			for pathIndex < len(path) && nodePathIndex < len(curr.path) {
-				if path[pathIndex] != curr.path[nodePathIndex] {
-					pathsMatch = false
+			p := 0
+			for (pathIndex+p) < len(path) && p < len(curr.path) {
+				if path[pathIndex+p] != curr.path[p] {
 					break
 				}
-				pathIndex += 1
-				nodePathIndex += 1
+				p += 1
 			}
 
-			if !pathsMatch {
-				pathIndex = ogPathIndex
-			} else {
-				if pathIndex == len(path) && nodePathIndex == len(curr.path) {
+			if p != 0 {
+				if pathIndex+p == len(path) && p == len(curr.path) {
+					// case 1: ins path is the same as the curr path - just set the value
 					curr.value = value
 					return
-				} else if nodePathIndex < len(curr.path) {
-					curr.split(nodePathIndex)
+				} else if pathIndex+p == len(path) && p < len(curr.path) {
+					// case 2: ins path fits inside the curr path - split at where ins path ends
+					curr.split(p)
 					curr.value = value
 					return
-				} else {
+				} else if pathIndex+p < len(path) && p == len(curr.path) {
+					// case 3: curr path fits inside the ins path - traverse curr node's children
 					nodes = &curr.children
 					keepSearching = true
+					pathIndex += p
 					break
+				} else if pathIndex+p < len(path) && p < len(curr.path) {
+					// case 4: neither path reaches the end - split and traverse curr node's children
+					curr.split(p)
+					curr.unset = true
+					nodes = &curr.children
+					keepSearching = true
+					pathIndex += p
+					break
+				} else {
+					// unkown case
+					panic("Unknown case for inserting node in radix trie: this is a bug")
 				}
 			}
 		}
@@ -97,30 +109,38 @@ func (trie *trie[v]) find(method string, path string) *v {
 		keepSearching = false
 		for i := range *nodes {
 			curr := &(*nodes)[i]
-			pathsMatch := true
-			ogPathIndex := pathIndex
-			nodePathIndex := 0
 
-			for pathIndex < len(path) && nodePathIndex < len(curr.path) {
-				if path[pathIndex] != curr.path[nodePathIndex] {
-					pathsMatch = false
+			p := 0
+			for (pathIndex+p) < len(path) && p < len(curr.path) {
+				if path[pathIndex+p] != curr.path[p] {
 					break
 				}
-				pathIndex += 1
-				nodePathIndex += 1
+				p += 1
 			}
 
-			if !pathsMatch {
-				pathIndex = ogPathIndex
-			} else {
-				if pathIndex == len(path) && nodePathIndex == len(curr.path) {
-					return &curr.value
-				} else if nodePathIndex < len(curr.path) {
+			if p != 0 {
+				if pathIndex+p == len(path) && p == len(curr.path) {
+					// case 1: ins path is the same as the curr path - just get the value
+					if curr.unset {
+						return nil
+					} else {
+						return &curr.value
+					}
+				} else if pathIndex+p == len(path) && p < len(curr.path) {
+					// case 2: ins path fits inside the curr path - there is definitely no value here
 					return nil
-				} else {
+				} else if pathIndex+p < len(path) && p == len(curr.path) {
+					// case 3: curr path fits inside the ins path - traverse curr node's children
 					nodes = &curr.children
 					keepSearching = true
+					pathIndex += p
 					break
+				} else if pathIndex+p < len(path) && p < len(curr.path) {
+					// case 4: neither path reaches the end - there is definitely no value here
+					return nil
+				} else {
+					// unkown case
+					panic("Unknown case for finding node in radix trie: this is a bug")
 				}
 			}
 		}
@@ -140,7 +160,9 @@ func (trie *trie[v]) routes() []string {
 }
 
 func (n *node[v]) routes(path string, routes *[]string) {
-	*routes = append(*routes, path)
+	if !n.unset {
+		*routes = append(*routes, path)
+	}
 	for i := range n.children {
 		child := &n.children[i]
 		child.routes(path+child.path, routes)
