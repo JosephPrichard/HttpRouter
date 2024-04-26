@@ -28,7 +28,7 @@ type Router interface {
 type ServerRouter struct {
 	prefix          string
 	middlewares     []Middleware
-	trie            trie[http.Handler]
+	trie            Trie[http.Handler]
 	notFoundHandler http.HandlerFunc
 }
 
@@ -105,7 +105,14 @@ func (router *ServerRouter) Route(method string, route string, routeHandler http
 
 func (router *ServerRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := strings.Trim(r.RequestURI, " \n\t")
-	handler := router.trie.find(r.Method, path)
+
+	handler, err := router.trie.find(r.Method, path)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
 	if handler == nil || *handler == nil {
 		router.notFoundHandler(w, r)
 	} else {

@@ -84,15 +84,6 @@ func createTestRouter() *ServerRouter {
 		})
 	})
 
-	sr.Get("/{name}/{n:[0-9]+}", func(w http.ResponseWriter, r *http.Request) {
-		vars := Vars(r)
-		name := vars["name"]
-		_, err := w.Write([]byte("Name: " + name))
-		if err != nil {
-			log.Fatalf("Failed to write message %s\n", err)
-		}
-	})
-
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		_, err := w.Write([]byte("Custom Not Found"))
 		if err != nil {
@@ -110,7 +101,6 @@ func TestRoutes(t *testing.T) {
 		"POST /api/echo",
 		"GET /api/products/ping",
 		"GET /api/products/ping/pong",
-		"GET /api/products/{name}/{n:[0-9]+}",
 	}
 	actualRoutes := r.Routes()
 	if !reflect.DeepEqual(actualRoutes, expectedRoutes) {
@@ -132,7 +122,6 @@ func TestRouter(t *testing.T) {
 	}
 
 	testTable := []Test{
-		{method: "GET", url: "/api/products/books/123", bodyIn: "", bodyOut: "1 2 3 Name: books 3 2 1"},
 		{method: "GET", url: "/api/products/books/qbc", bodyIn: "", bodyOut: "Custom Not Found"},
 		{method: "POST", url: "/api/echo", bodyIn: "Hello World", bodyOut: "1 2 Hello World 2 1"},
 		{method: "POST", url: "/api/echo", bodyIn: "Stop", bodyOut: "1 2 Early Stop 1"},
@@ -230,7 +219,7 @@ func BenchmarkSendRoutes(b *testing.B) {
 				b.Logf("Failed test %d, Expected Hello World!, got %s", i, strBody)
 				fail = true
 			} else {
-				b.Logf("Passed test %d", i)
+				//b.Logf("Passed test %d", i)
 			}
 		}()
 	}

@@ -1,7 +1,8 @@
 # HttpRouter
-A simple router for building http services in Go. Supports path parameters, regex matching, sub-routing, and middlewares. Additionally includes utility functions to extract path parameters in handler functions. The package is implemented using a prefix tree and uses a simple recursive algorithm to construct routes with middleware. It was inspired by popular Go routers such as [chi](https://github.com/go-chi/chi) and [gorilla/mux](https://github.com/gorilla/mux).
+A simple router for building http services in Go. Supports sub-routing and middlewares.
 
-HttpRouter is not a production ready router yet - I'm still working on verification and testing.
+The package is implemented using a radix tree and uses a simple recursive algorithm to construct routes with middleware. It was inspired by popular Go routers such as [chi](https://github.com/go-chi/chi) and [gorilla/mux](https://github.com/gorilla/mux).
+Package doesn't support path parameter matching - and instead uses a radix tree optimized for static paths.
 
 ## Install
 
@@ -41,42 +42,6 @@ http.ListenAndServe(":9000", r)
 ```
 
 All routes attached to the router will only match a request url that includes the prefix.
-
-### Path Params and Regexes
-
-Routes can have path parameters by putting a variable name between left and right braces `{ }`.
-```go
-r.Get("/product/{name}/{slug}", func(w http.ResponseWriter, r *http.Request) {
-    vars := httprouter.Vars(r)
-    product := GetProduct(vars["name"], vars["slug"])
-    w.WriteHeader(http.StatusOK)
-    WriteJson(w, product)
-})
-```
-
-Path parameters can be accessed in the handler using the `Vars` function.
-
-We can also specify routes that only match if the parameter matches a regex matches by putting a regex
-after a colon `:`.
-
-```go
-r.Get("/product/{name:[0-9]+}", HandleProduct)
-r.Get("/article/{name:[a-z]+}", HandleArticle)
-```
-
-The first matches any route that has only alphabetical characters and the latter only numerical characters.
-
-Keep in mind that different route types have different precedence.
-
-```go
-r.Get("/product/book", HandleProduct)
-r.Get("/product/{name:[a-b]+}", HandleArticle)
-r.Get("/product/{name}", HandleArticle)
-```
-
-Literal routes have precedence over param routes. If we send `/product/book`, then the first route matches. 
-Sending `/product/123` matches the second route. 
-Sending `/product/microwave` matches the third route.
 
 ### Middlewares
 
